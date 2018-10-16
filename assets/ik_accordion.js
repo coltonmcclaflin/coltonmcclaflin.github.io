@@ -38,22 +38,25 @@
 		}).addClass('ik_accordion');
         
         $elem.attr({'aria-multiselectable': !this.options.autoCollapse}); // define if more than one panel can be expanded
-        
+		
         this.headers = $elem.children('dt')
-        .attr({'role': 'heading'}); // set heading role for each accordion header
-			
+            .attr({'role': 'heading'}); // set heading role for each accordion header
+        
 		this.headers = $elem.children('dt').each(function(i, el) {
 			var $me, $btn;
 			
 			$me = $(el);
 			$btn = $('<div/>').attr({
-                'id': id + '_btn_' + i
-        })
-        .addClass('button')
-        .html($me.html())
-        .on('keydown', {'plugin': plugin}, plugin.onKeyDown) // enable keyboard navigation
-        .on('click', {'plugin': plugin}, plugin.togglePanel);
-        
+                'id': id + '_btn_' + i,
+                'role': 'button',
+                'aria-controls': id + '_panel_' + i, // associate button with corresponding panel
+                'aria-expanded': false, // toggle expanded state
+                'tabindex': 0 //add keyboard focus
+            })
+            .addClass('button')
+            .html($me.html())
+            .on('keydown', {'plugin': plugin}, plugin.onKeyDown) // enable keyboard navigation
+            .on('click', {'plugin': plugin}, plugin.togglePanel);
 			$me.empty().append($btn); // wrap content of each header in an element with role button
 		});
 		
@@ -92,13 +95,24 @@
 				
 				$hdr = $(el);
 				$btn = $hdr.find('.button');
-				
 				if($btn[0] != $(event.currentTarget)[0]) { 
 					$btn.removeClass('expanded');
+                    $btn.attr({
+                        'aria-expanded': false // toggle expanded state
+                    });
 					$hdr.next().slideUp(plugin.options.animationSpeed);
+                    $hdr.next().attr({
+                        'aria-hidden': true
+                    });
 				} else { 
 					$btn.addClass('expanded');
+                    $btn.attr({
+                        'aria-expanded': true // toggle expanded state
+                    });
 					$hdr.next().slideDown(plugin.options.animationSpeed);
+                    $hdr.next().attr({
+                        'aria-hidden': false
+                    });
 				}
 			});
 			
@@ -106,7 +120,22 @@
 		
 			isVisible = !!$panel.is(':visible');
 			$panel.slideToggle({ duration: plugin.options.animationSpeed });
-			
+        
+            if(isVisible){
+                $me.attr({
+                    'aria-expanded': false
+                });
+                $panel.attr({
+                    'aria-hidden': true
+                });
+            } else {
+                $me.attr({
+                    'aria-expanded': true
+                });
+                $panel.attr({
+                    'aria-hidden': false
+                });
+            }
 		}
 	};
     
